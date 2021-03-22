@@ -1,5 +1,9 @@
 import './App.css';
 import React, { useState, useEffect } from 'react';
+import Table from './Components/Table/Table';
+import LineGraph from './Components/LineGraph/LineGraph';
+import { sortData } from './util';
+
 import {
   FormControl,
   Select,
@@ -12,12 +16,36 @@ import Map from './Components/Map/Map';
 function App() {
   const [countries, setCountries] = useState([]);
   const [country, setCountry] = useState('worldwide');
+  const [countryInfo, setCountryInfo] = useState({});
+  const [tableData, setTableData] = useState([]);
+
+  useEffect(() => {
+    fetch('https://disease.sh/v3/covid-19/all')
+      .then(response => response.json())
+      .then(data => {
+        setCountryInfo(data);
+      });
+  }, []);
 
   const onCountryChange = async event => {
     event.preventDefault();
     const countryCode = event.target.value;
     setCountry(countryCode);
+
+    const url =
+      countryCode === 'worldwide'
+        ? 'https://disease.sh/v3/covid-19/all'
+        : `https://disease.sh/v3/covid-19/countries/${countryCode}`;
+
+    await fetch(url)
+      .then(response => response.json())
+      .then(data => {
+        setCountry(countryCode);
+        setCountryInfo(data);
+      })
+      .catch(error => alert(error.message));
   };
+  console.log(countryInfo);
 
   useEffect(() => {
     const getCountriesData = async () => {
@@ -28,6 +56,8 @@ function App() {
             name: country.country, //United States
             value: country.countryInfo.iso2, //UK, USA,
           }));
+          const sortedData = sortData(data);
+          setTableData(sortedData);
           setCountries(countries);
         });
     };
@@ -53,9 +83,21 @@ function App() {
           </FormControl>
         </div>
         <div className='app__stats'>
-          <InfoBox title='Coronavirus Cases' total={2000} cases={123} />
-          <InfoBox title='Recovered' total={2000} cases={123} />
-          <InfoBox title='Deaths' total={2000} cases={123} />
+          <InfoBox
+            title='Coronavirus Cases'
+            cases={countryInfo.todayCases}
+            total={countryInfo.cases}
+          />
+          <InfoBox
+            title='Recovered'
+            total={countryInfo.totalRecovered}
+            cases={countryInfo.todayRecovered}
+          />
+          <InfoBox
+            title='Deaths'
+            total={countryInfo.totalDeaths}
+            cases={countryInfo.todayDeaths}
+          />
         </div>
         <Map />
       </div>
@@ -63,9 +105,9 @@ function App() {
       <Card className='app__right'>
         <CardContent>
           <h3>Live Cases by Country</h3>
-          {/*Table*/}
+          <Table countries={tableData} />
           <h3>Worldwide new cases</h3>
-          {/*Graph*/}
+          <LineGraph />
         </CardContent>
       </Card>
     </div>
