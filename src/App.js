@@ -12,6 +12,12 @@ function App() {
   const [countries, setCountries] = useState([]);
   const [country, setCountry] = useState('worldwide');
 
+  const onCountryChange = async event => {
+    event.preventDefault();
+    const countryCode = event.target.value;
+    setCountry(countryCode);
+  };
+
   useEffect(() => {
     const getCountriesData = async () => {
       await fetch('https://disease.sh/v3/covid-19/countries')
@@ -31,11 +37,7 @@ function App() {
       <div className='app__header'>
         <h1>COVID-19 TRACKER</h1>
         <FormControl className='app__dropdown'>
-          <Select
-            variant='outlined'
-            value={country}
-            onChange={e => setCountry(e.target.value)}
-          >
+          <Select variant='outlined' value={country} onChange={onCountryChange}>
             <MenuItem value='worldwide'>Worldwide</MenuItem>
             {countries.map(country => (
               <MenuItem value={country.value}>{country.name}</MenuItem>
@@ -43,9 +45,6 @@ function App() {
           </Select>
         </FormControl>
       </div>
-
-      {/*Header*/}
-      {/*Title + Select Input */}
 
       {/*InfoBox*/}
       {/*InfoBox*/}
